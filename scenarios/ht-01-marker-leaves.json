@@ -1,0 +1,37 @@
+{
+  "id": "ht-01-marker-leaves",
+  "version": 1,
+  "title": "The marker leaves",
+  "skill": "half-turn",
+  "brief": "Your 4 plays it into you. Their 8 was right behind you. Is he still there?",
+  "coach": {
+    "why": "Their 8 left you to press our 8 while the ball was travelling. A late shoulder check shows the space behind you is open: receive on the half-turn and go.",
+    "tip": "The picture changes while the ball travels. Check again just before it arrives."
+  },
+  "intendedBest": "carry",
+  "scanRequired": true,
+  "keyEntity": "o8",
+  "timed": false,
+  "kickAt": 1.2,
+  "passSpeed": 12,
+  "you": { "id": "you", "number": 6, "path": [[0, 44, 33], [1.0, 43, 33], [2.4, 42.5, 33]] },
+  "passer": "m4",
+  "teammates": [
+    { "id": "m4", "number": 4, "path": [[0, 30, 28]] },
+    { "id": "m8", "number": 8, "path": [[0, 50, 46], [2.5, 54, 47]] },
+    { "id": "m10", "number": 10, "path": [[0, 60, 30], [2.5, 62, 28]] },
+    { "id": "m9", "number": 9, "path": [[0, 72, 36]] },
+    { "id": "m3", "number": 3, "path": [[0, 40, 62], [2.5, 46, 63]] },
+    { "id": "m2", "number": 2, "path": [[0, 40, 6], [2.5, 44, 5]] }
+  ],
+  "opponents": [
+    { "id": "o8", "number": 8, "path": [[0, 46, 34], [1.2, 46, 34.5], [2.4, 52, 43.5]] },
+    { "id": "o10", "number": 10, "path": [[0, 33, 44], [2.5, 32, 42]] },
+    { "id": "o6", "number": 6, "path": [[0, 58, 33], [2.5, 59, 31]] },
+    { "id": "o5", "number": 5, "path": [[0, 62, 27], [2.5, 63, 27]] },
+    { "id": "o4", "number": 4, "path": [[0, 74, 33]] },
+    { "id": "o3", "number": 3, "path": [[0, 73, 40]] },
+    { "id": "o7", "number": 7, "path": [[0, 55, 52], [2.5, 55, 50]] },
+    { "id": "o2", "number": 2, "path": [[0, 50, 12]] }
+  ]
+}

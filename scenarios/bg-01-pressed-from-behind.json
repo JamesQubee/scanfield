@@ -1,0 +1,35 @@
+{
+  "id": "bg-01-pressed-from-behind",
+  "version": 1,
+  "title": "Pressed from behind",
+  "skill": "back-to-goal",
+  "brief": "You can feel him on your back. What now?",
+  "coach": {
+    "why": "Their 5 is tight on your back. Turning loses the ball and the forward passes are covered. Set it back to the 6 and spin for the return.",
+    "tip": "Tight marker, no space: play the way you face, then move."
+  },
+  "intendedBest": "setback",
+  "scanRequired": false,
+  "keyEntity": "o5",
+  "timed": true,
+  "kickAt": 1.2,
+  "passSpeed": 12,
+  "you": { "id": "you", "number": 9, "path": [[0, 62, 34], [1.0, 61, 34], [2.4, 60.5, 34]] },
+  "passer": "m6",
+  "teammates": [
+    { "id": "m6", "number": 6, "path": [[0, 48, 32]] },
+    { "id": "m10", "number": 10, "path": [[0, 72, 28]] },
+    { "id": "m11", "number": 11, "path": [[0, 74, 46]] },
+    { "id": "m8", "number": 8, "path": [[0, 52, 48]] },
+    { "id": "m7", "number": 7, "path": [[0, 70, 8]] }
+  ],
+  "opponents": [
+    { "id": "o5", "number": 5, "path": [[0, 65, 35], [2.4, 61.8, 34.4]] },
+    { "id": "o4", "number": 4, "path": [[0, 73, 31]] },
+    { "id": "o3", "number": 3, "path": [[0, 75, 43]] },
+    { "id": "o2", "number": 2, "path": [[0, 72, 11]] },
+    { "id": "o6", "number": 6, "path": [[0, 56, 22]] },
+    { "id": "o8", "number": 8, "path": [[0, 57, 46]] },
+    { "id": "o10", "number": 10, "path": [[0, 46, 42]] }
+  ]
+}

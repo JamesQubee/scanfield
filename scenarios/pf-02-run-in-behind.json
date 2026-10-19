@@ -1,0 +1,37 @@
+{
+  "id": "pf-02-run-in-behind",
+  "version": 1,
+  "title": "Run in behind",
+  "skill": "play-forward",
+  "brief": "Our 9 is about to run. Will you see it?",
+  "coach": {
+    "why": "Our 9 spun off their 5 and ran into the channel. A ball into his path beats their whole back line.",
+    "tip": "Scan for runs, not just for players. Play the ball where your teammate is going."
+  },
+  "intendedBest": "pass:m9",
+  "scanRequired": true,
+  "keyEntity": "m9",
+  "timed": true,
+  "kickAt": 1.2,
+  "passSpeed": 12,
+  "you": { "id": "you", "number": 10, "path": [[0, 57, 30], [1.0, 56, 30.5], [2.6, 55.5, 31]] },
+  "passer": "m8",
+  "teammates": [
+    { "id": "m8", "number": 8, "path": [[0, 44, 40]] },
+    { "id": "m9", "number": 9, "path": [[0, 72, 25], [1.6, 73, 24], [4.4, 86, 18]] },
+    { "id": "m11", "number": 11, "path": [[0, 66, 52]] },
+    { "id": "m7", "number": 7, "path": [[0, 64, 6]] },
+    { "id": "m2", "number": 2, "path": [[0, 46, 10]] }
+  ],
+  "opponents": [
+    { "id": "o6", "number": 6, "path": [[0, 61, 35], [2.4, 58, 34.5]] },
+    { "id": "o8", "number": 8, "path": [[0, 62, 41]] },
+    { "id": "o5", "number": 5, "path": [[0, 76, 34], [4, 78, 33]] },
+    { "id": "o4", "number": 4, "path": [[0, 76, 40], [4, 77, 39]] },
+    { "id": "o3", "number": 3, "path": [[0, 74, 45], [4, 76, 44]] },
+    { "id": "o2", "number": 2, "path": [[0, 73, 6], [4, 76, 7]] },
+    { "id": "o11", "number": 11, "path": [[0, 50, 46], [2.4, 48, 43]] },
+    { "id": "o7", "number": 7, "path": [[0, 66, 56]] },
+    { "id": "o9", "number": 9, "path": [[0, 63, 9], [2.4, 64, 8]] }
+  ]
+}

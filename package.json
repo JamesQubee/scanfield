@@ -17,7 +17,7 @@
     "test:worker": "vitest run --project worker",
     "e2e": "playwright test",
     "db:migrate:local": "wrangler d1 migrations apply scanfield --local",
-    "scenarios": "node --experimental-strip-types scripts/scenario-report.ts",
+    "scenarios": "tsx scripts/scenario-report.ts",
     "deploy": "vite build && wrangler deploy"
   },
   "dependencies": {
@@ -32,6 +32,7 @@
     "@types/three": "0.186.0",
     "lil-gui": "0.21.0",
     "posthog-js": "1.438.12",
+    "tsx": "^4.23.15",
     "typescript": "7.0.2",
     "vite": "8.3.4",
     "vitest": "5.0.5",

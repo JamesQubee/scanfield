@@ -1,0 +1,35 @@
+{
+  "id": "bg-03-lane-closes",
+  "version": 1,
+  "title": "The lane closes",
+  "skill": "back-to-goal",
+  "brief": "Our 10 was free a moment ago. Is the lane still open?",
+  "coach": {
+    "why": "Their 6 slid across into the passing lane while the ball travelled. The pass you remembered is now an interception. Set it back and go again.",
+    "tip": "Check the lane, not just the player. Lanes close in a second."
+  },
+  "intendedBest": "setback",
+  "scanRequired": true,
+  "keyEntity": "o6",
+  "timed": true,
+  "kickAt": 1.2,
+  "passSpeed": 12,
+  "you": { "id": "you", "number": 8, "path": [[0, 47, 34], [1.0, 46, 34], [2.4, 45.5, 34]] },
+  "passer": "m4",
+  "teammates": [
+    { "id": "m4", "number": 4, "path": [[0, 32, 31]] },
+    { "id": "m10", "number": 10, "path": [[0, 62, 37], [2.4, 62, 36]] },
+    { "id": "m9", "number": 9, "path": [[0, 74, 33]] },
+    { "id": "m11", "number": 11, "path": [[0, 60, 60]] },
+    { "id": "m2", "number": 2, "path": [[0, 44, 8]] }
+  ],
+  "opponents": [
+    { "id": "o6", "number": 6, "path": [[0, 57, 25], [1.2, 57, 26], [2.4, 54, 35]] },
+    { "id": "o8", "number": 8, "path": [[0, 51, 37], [2.4, 48.2, 35.2]] },
+    { "id": "o4", "number": 4, "path": [[0, 72, 32]] },
+    { "id": "o3", "number": 3, "path": [[0, 72, 42]] },
+    { "id": "o7", "number": 7, "path": [[0, 60, 55]] },
+    { "id": "o2", "number": 2, "path": [[0, 52, 12]] },
+    { "id": "o10", "number": 10, "path": [[0, 36, 44]] }
+  ]
+}

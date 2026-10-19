@@ -1,0 +1,35 @@
+{
+  "id": "bg-02-bounce-wide",
+  "version": 1,
+  "title": "Bounce it wide",
+  "skill": "back-to-goal",
+  "brief": "Marked from behind, and the way back is closed too. Look for the third option.",
+  "coach": {
+    "why": "Their 9 is shutting off the pass back to our 6. Our 11 is free on the side: bounce it wide first time.",
+    "tip": "If the safe pass is gone, a scan shows you the next one."
+  },
+  "intendedBest": "pass:m11",
+  "scanRequired": true,
+  "keyEntity": "m11",
+  "timed": true,
+  "kickAt": 1.2,
+  "passSpeed": 12,
+  "you": { "id": "you", "number": 9, "path": [[0, 62, 34], [1.0, 61, 34], [2.4, 60.5, 34]] },
+  "passer": "m6",
+  "teammates": [
+    { "id": "m6", "number": 6, "path": [[0, 48, 30]] },
+    { "id": "m11", "number": 11, "path": [[0, 64, 55], [2.4, 64, 54]] },
+    { "id": "m10", "number": 10, "path": [[0, 72, 28]] },
+    { "id": "m7", "number": 7, "path": [[0, 70, 8]] },
+    { "id": "m8", "number": 8, "path": [[0, 50, 46]] }
+  ],
+  "opponents": [
+    { "id": "o5", "number": 5, "path": [[0, 65, 35], [2.4, 61.8, 34.4]] },
+    { "id": "o9", "number": 9, "path": [[0, 45, 26], [1.2, 46, 27], [2.4, 51, 31]] },
+    { "id": "o8", "number": 8, "path": [[0, 53, 42], [2.4, 54, 44]] },
+    { "id": "o4", "number": 4, "path": [[0, 73, 31]] },
+    { "id": "o3", "number": 3, "path": [[0, 75, 43]] },
+    { "id": "o2", "number": 2, "path": [[0, 71, 10], [2.4, 70.5, 9]] },
+    { "id": "o6", "number": 6, "path": [[0, 57, 22]] }
+  ]
+}

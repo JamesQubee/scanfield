@@ -1,0 +1,36 @@
+{
+  "id": "ht-03-away-from-pressure",
+  "version": 1,
+  "title": "Turn away from him",
+  "skill": "half-turn",
+  "brief": "Space to turn, but which way? Check both shoulders.",
+  "coach": {
+    "why": "Their 8 is closing from your right shoulder. Open your body to the left and take your first touch away from him into the free side.",
+    "tip": "Scan both sides. Turn away from the pressure, not into it."
+  },
+  "intendedBest": "carry",
+  "scanRequired": true,
+  "keyEntity": "o8",
+  "timed": true,
+  "kickAt": 1.1,
+  "passSpeed": 12,
+  "you": { "id": "you", "number": 6, "path": [[0, 46, 32], [1.0, 45, 32], [2.4, 44.5, 32]] },
+  "passer": "m4",
+  "teammates": [
+    { "id": "m4", "number": 4, "path": [[0, 32, 27]] },
+    { "id": "m8", "number": 8, "path": [[0, 52, 50], [2.5, 55, 51]] },
+    { "id": "m10", "number": 10, "path": [[0, 62, 33], [2.5, 63, 32]] },
+    { "id": "m9", "number": 9, "path": [[0, 74, 37]] },
+    { "id": "m7", "number": 7, "path": [[0, 60, 8], [2.5, 62, 7]] },
+    { "id": "m3", "number": 3, "path": [[0, 40, 62]] }
+  ],
+  "opponents": [
+    { "id": "o8", "number": 8, "path": [[0, 55, 41], [1.0, 54, 40], [2.4, 48.5, 35.5]] },
+    { "id": "o6", "number": 6, "path": [[0, 60, 30], [2.5, 60, 31]] },
+    { "id": "o10", "number": 10, "path": [[0, 34, 42], [2.5, 33, 40]] },
+    { "id": "o5", "number": 5, "path": [[0, 64, 34], [2.5, 64.5, 33]] },
+    { "id": "o4", "number": 4, "path": [[0, 75, 35]] },
+    { "id": "o7", "number": 7, "path": [[0, 56, 54]] },
+    { "id": "o2", "number": 2, "path": [[0, 66, 11]] }
+  ]
+}

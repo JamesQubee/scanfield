@@ -1,0 +1,37 @@
+{
+  "id": "ht-04-other-shoulder",
+  "version": 1,
+  "title": "The other shoulder",
+  "skill": "half-turn",
+  "brief": "Your 5 plays it in. Pressure is coming, but from where?",
+  "coach": {
+    "why": "Their 10 is coming from your left this time, and the right side is empty. Receive across your body with your back foot and carry it right.",
+    "tip": "One check is half a picture. Look over both shoulders before the ball arrives."
+  },
+  "intendedBest": "carry",
+  "scanRequired": true,
+  "keyEntity": "o10",
+  "timed": true,
+  "kickAt": 1.1,
+  "passSpeed": 12.5,
+  "you": { "id": "you", "number": 8, "path": [[0, 47, 38], [1.0, 46, 38], [2.4, 45.5, 38]] },
+  "passer": "m5",
+  "teammates": [
+    { "id": "m5", "number": 5, "path": [[0, 33, 42]] },
+    { "id": "m6", "number": 6, "path": [[0, 40, 26], [2.5, 41, 25]] },
+    { "id": "m10", "number": 10, "path": [[0, 63, 36], [2.5, 64, 37]] },
+    { "id": "m9", "number": 9, "path": [[0, 75, 32]] },
+    { "id": "m11", "number": 11, "path": [[0, 62, 62], [2.5, 64, 63]] },
+    { "id": "m2", "number": 2, "path": [[0, 42, 8]] }
+  ],
+  "opponents": [
+    { "id": "o10", "number": 10, "path": [[0, 56, 29], [1.0, 55, 30], [2.4, 49.5, 34.5]] },
+    { "id": "o8", "number": 8, "path": [[0, 61, 40], [2.5, 62, 40]] },
+    { "id": "o9", "number": 9, "path": [[0, 36, 30], [2.5, 35, 31]] },
+    { "id": "o5", "number": 5, "path": [[0, 66, 36], [2.5, 66, 37]] },
+    { "id": "o4", "number": 4, "path": [[0, 76, 30]] },
+    { "id": "o3", "number": 3, "path": [[0, 74, 44]] },
+    { "id": "o11", "number": 11, "path": [[0, 56, 14]] },
+    { "id": "o2", "number": 2, "path": [[0, 66, 60]] }
+  ]
+}

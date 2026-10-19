@@ -1,0 +1,36 @@
+{
+  "id": "pf-03-far-side",
+  "version": 1,
+  "title": "The far side",
+  "skill": "play-forward",
+  "brief": "They have crowded this side. Where is the free player?",
+  "coach": {
+    "why": "Everyone shifted to the ball. Our 8 is alone in the far half-space with time to face forward.",
+    "tip": "When one side is crowded, the other side is open. Switch it."
+  },
+  "intendedBest": "pass:m8",
+  "scanRequired": true,
+  "keyEntity": "m8",
+  "timed": true,
+  "kickAt": 1.1,
+  "passSpeed": 12,
+  "you": { "id": "you", "number": 6, "path": [[0, 46, 22], [1.0, 45, 22], [2.4, 44.5, 22.5]] },
+  "passer": "m2",
+  "teammates": [
+    { "id": "m2", "number": 2, "path": [[0, 36, 9]] },
+    { "id": "m8", "number": 8, "path": [[0, 55, 44], [2.4, 56, 46]] },
+    { "id": "m7", "number": 7, "path": [[0, 58, 8]] },
+    { "id": "m10", "number": 10, "path": [[0, 60, 24]] },
+    { "id": "m3", "number": 3, "path": [[0, 40, 62]] }
+  ],
+  "opponents": [
+    { "id": "o8", "number": 8, "path": [[0, 51, 20], [2.4, 47.5, 20.5]] },
+    { "id": "o6", "number": 6, "path": [[0, 54, 18], [2.4, 52, 19]] },
+    { "id": "o11", "number": 11, "path": [[0, 40, 15], [2.4, 39, 12]] },
+    { "id": "o3", "number": 3, "path": [[0, 62, 20]] },
+    { "id": "o2", "number": 2, "path": [[0, 60, 12]] },
+    { "id": "o4", "number": 4, "path": [[0, 66, 30]] },
+    { "id": "o10", "number": 10, "path": [[0, 64, 34]] },
+    { "id": "o7", "number": 7, "path": [[0, 67, 60]] }
+  ]
+}

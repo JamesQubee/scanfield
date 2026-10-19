@@ -1,0 +1,36 @@
+{
+  "id": "pf-01-through-the-lines",
+  "version": 1,
+  "title": "Through the lines",
+  "skill": "play-forward",
+  "brief": "Someone is on your back. Is our 10 free between their lines?",
+  "coach": {
+    "why": "Their 9 is on your back, so you cannot turn. But their midfield split and our 10 is free between the lines: play it forward first time.",
+    "tip": "Before you receive, find the free player behind you. Forward first, safe second."
+  },
+  "intendedBest": "pass:m10",
+  "scanRequired": true,
+  "keyEntity": "m10",
+  "timed": true,
+  "kickAt": 1.2,
+  "passSpeed": 12,
+  "you": { "id": "you", "number": 6, "path": [[0, 46, 34], [1.0, 45, 34], [2.4, 44.5, 34]] },
+  "passer": "m5",
+  "teammates": [
+    { "id": "m5", "number": 5, "path": [[0, 31, 38]] },
+    { "id": "m10", "number": 10, "path": [[0, 62, 30], [2.4, 61, 33]] },
+    { "id": "m9", "number": 9, "path": [[0, 72, 35]] },
+    { "id": "m8", "number": 8, "path": [[0, 50, 52]] },
+    { "id": "m2", "number": 2, "path": [[0, 42, 8]] }
+  ],
+  "opponents": [
+    { "id": "o9", "number": 9, "path": [[0, 49, 38.5], [2.4, 46.2, 36.8]] },
+    { "id": "o6", "number": 6, "path": [[0, 56, 26], [2.4, 55, 24]] },
+    { "id": "o8", "number": 8, "path": [[0, 56, 44], [2.4, 55, 46]] },
+    { "id": "o4", "number": 4, "path": [[0, 71, 30]] },
+    { "id": "o3", "number": 3, "path": [[0, 71, 41]] },
+    { "id": "o7", "number": 7, "path": [[0, 52, 55]] },
+    { "id": "o2", "number": 2, "path": [[0, 50, 12]] },
+    { "id": "o10", "number": 10, "path": [[0, 36, 29], [2.4, 35, 31]] }
+  ]
+}
