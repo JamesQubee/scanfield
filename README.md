@@ -11,6 +11,8 @@ Built with TypeScript, three.js (WebGL) and Canvas 2D on the client, and a Cloud
 
 ## Try it
 
+Live: **https://play.scanfield.workers.dev** (Cloudflare Workers + D1). A 1:30 walkthrough video is at [/walkthrough.mp4](https://play.scanfield.workers.dev/walkthrough.mp4).
+
 | URL | What it shows |
 |---|---|
 | `/` | Home, three drills (one behind the Pro paywall), progress, settings |

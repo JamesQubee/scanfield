@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "scanfield",
+  "name": "play",
   "main": "./worker/index.ts",
   "compatibility_date": "2026-10-01",
   "assets": {
@@ -12,7 +12,7 @@
     {
       "binding": "DB",
       "database_name": "scanfield",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "e79c4ef3-6e58-4d62-9413-8c19866a9120",
       "migrations_dir": "migrations"
     }
   ],
