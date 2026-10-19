@@ -2,7 +2,12 @@ import type { ListRunsResponse, RunSummary, SaveRunResponse } from "../../src/sh
 import type { RouteContext } from "../env";
 import type { Player } from "../lib/auth";
 import { HttpError, json, readJson } from "../lib/http";
+import { PRO_DRILL_IDS } from "../../src/shared/plans";
+import { loadPlan } from "../lib/plan";
 import { parseRunPayload, summarizeRun, type ValidRun } from "../lib/validate-run";
+
+// Checked here too, so a free player cannot record Pro drills by editing a URL.
+const PRO_DRILLS = new Set(PRO_DRILL_IDS);
 
 const BODY_LIMIT = 64 * 1024;
 
@@ -46,6 +51,9 @@ function momentRows(run: ValidRun): string {
 
 export async function saveRun(c: RouteContext, player: Player): Promise<Response> {
   const run = parseRunPayload(await readJson(c.request, BODY_LIMIT));
+  if (PRO_DRILLS.has(run.drillId) && (await loadPlan(c.env, player.id)).plan !== "pro") {
+    throw new HttpError(403, "pro_required");
+  }
   const s = summarizeRun(run.moments);
   const db = c.env.DB;
 

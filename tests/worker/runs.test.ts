@@ -82,20 +82,61 @@ describe("POST /api/runs", () => {
     ["idx out of range", { moments: [moment(0), moment(2)] }],
     ["grade above 100", { moments: [moment(0, { grade: 101 })] }],
     ["fractional grade", { moments: [moment(0, { grade: 50.5 })] }],
-    ["reaction over 60s", { moments: [moment(0, { reactionMs: 60_001 })] }],
+    ["negative reaction", { moments: [moment(0, { reactionMs: -1 })] }],
     ["too many scans", { moments: [moment(0, { scans: 51 })] }],
     ["unknown choice kind", { moments: [moment(0, { choiceKind: "dribble" as never })] }],
     ["correct as a string", { moments: [moment(0, { correct: "yes" as never })] }],
     ["unsafe drill id", { drillId: "<script>" }],
     ["finish before start", { startedAt: Date.now() - 1_000, finishedAt: Date.now() - 2_000 }],
-    ["finish in the future", { finishedAt: Date.now() + 3_600_000 }],
-    ["timestamps in seconds", { startedAt: 1_700_000_000, finishedAt: 1_700_000_060 }],
+    ["fractional timestamps", { startedAt: Date.now() - 1_000.5 }],
   ])("rejects %s with 400", async (_label, overrides) => {
     const player = await newPlayer();
     const run = { ...makeRun(), ...overrides };
     const res = await call("/api/runs", jsonInit("POST", run, player.token));
     expect(res.status).toBe(400);
     expect((await res.json<{ error: string }>()).error).toMatch(/^invalid run: /);
+  });
+
+  // Valid play from a device with a wrong clock, or a long think, is kept and corrected.
+  it.each([
+    ["a finish in the future (fast device clock)", { startedAt: Date.now() + 3_500_000, finishedAt: Date.now() + 3_600_000 }],
+    ["timestamps in seconds", { startedAt: 1_700_000_000, finishedAt: 1_700_000_060 }],
+  ])("keeps %s and stamps it with the server's clock", async (_label, overrides) => {
+    const player = await newPlayer();
+    const run = { ...makeRun(), ...overrides };
+    const before = Date.now();
+    const res = await call("/api/runs", jsonInit("POST", run, player.token));
+    expect(res.status).toBe(201);
+    const row = await env.DB.prepare("SELECT started_at, finished_at FROM runs WHERE id = ?").bind(run.id).first<{ started_at: number; finished_at: number }>();
+    expect(row!.finished_at).toBeGreaterThanOrEqual(before);
+    expect(row!.finished_at).toBeLessThanOrEqual(Date.now());
+    expect(row!.finished_at - row!.started_at).toBe(overrides.finishedAt - overrides.startedAt);
+  });
+
+  it("caps a very long think at 60 s and a drill left open for hours at 3 h", async () => {
+    const player = await newPlayer();
+    const now = Date.now();
+    const run = { ...makeRun({ moments: [moment(0, { reactionMs: 95_000, lastScanBeforeArrivalMs: 70_000 })] }), startedAt: now - 5 * 3_600_000, finishedAt: now - 1_000 };
+    const res = await call("/api/runs", jsonInit("POST", run, player.token));
+    expect(res.status).toBe(201);
+    const m = await env.DB.prepare("SELECT reaction_ms, last_scan_before_arrival_ms FROM moments WHERE run_id = ?").bind(run.id).first<{ reaction_ms: number; last_scan_before_arrival_ms: number }>();
+    expect(m).toEqual({ reaction_ms: 60_000, last_scan_before_arrival_ms: 60_000 });
+    const r = await env.DB.prepare("SELECT started_at, finished_at FROM runs WHERE id = ?").bind(run.id).first<{ started_at: number; finished_at: number }>();
+    expect(r!.finished_at - r!.started_at).toBe(3 * 3_600_000);
+  });
+
+  it("refuses a Pro drill from a free player (403) and accepts it once Pro", async () => {
+    const player = await newPlayer();
+    const run = makeRun({ drillId: "back-to-goal" });
+    const res = await call("/api/runs", jsonInit("POST", run, player.token));
+    expect(res.status).toBe(403);
+    expect((await res.json<{ error: string }>()).error).toBe("pro_required");
+    expect(await countRows(run.id)).toEqual({ runs: 0, moments: 0 });
+    // Through the demo checkout (a server-signed webhook), then the same run goes in.
+    const session = await call("/api/checkout", jsonInit("POST", undefined, player.token));
+    const { sessionId } = await session.json<{ sessionId: string }>();
+    expect((await call("/api/demo/checkout/complete", jsonInit("POST", { sessionId }, player.token))).status).toBe(200);
+    expect((await call("/api/runs", jsonInit("POST", run, player.token))).status).toBe(201);
   });
 
   it("rejects a body over 64 KB with 413", async () => {

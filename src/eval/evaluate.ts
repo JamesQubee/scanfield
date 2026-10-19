@@ -33,6 +33,14 @@ export interface Threat {
   at: V2;
 }
 
+/** Where and when the ball is lost, and to whom (the outcome animation and the board both use this). */
+export interface Loss {
+  id: string;
+  at: V2;
+  /** Seconds after the decision when he has it. */
+  time: number;
+}
+
 export interface OptionEval {
   option: Option;
   /** Probability the ball gets there. */
@@ -46,6 +54,8 @@ export interface OptionEval {
   threat: Threat | null;
   /** Deterministic outcome used for the animation. */
   succeeds: boolean;
+  /** Set when it does not succeed. */
+  loss: Loss | null;
   /** Seconds after the decision until the ball reaches the target. */
   travel: number;
   /** Ball (or carrier) speed along the line, m/s. */
@@ -123,6 +133,13 @@ function pressureAt(scenario: Scenario, t: number, at: V2, arrive: number, param
   return sigmoid((0.2 - gap) / 0.2);
 }
 
+/** A ball into space can survive the line and still lose the footrace at the spot. */
+interface Footrace {
+  p: number;
+  /** The defender who gets there first, when ours does not. */
+  loss: Loss | null;
+}
+
 function finish(
   params: ModelParams,
   option: Option,
@@ -132,15 +149,21 @@ function finish(
   press: number,
   speed: number,
   release: number,
-  extraP = 1,
+  footrace?: Footrace,
 ): OptionEval {
-  const p = r.pAll * extraP;
+  const p = r.pAll * (footrace?.p ?? 1);
   const value = valueAt(option.target);
-  const loss = r.threat && r.threat.margin < 0.25 ? r.threat.at : ballAt;
+  const lossPoint = r.threat && r.threat.margin < 0.25 ? r.threat.at : ballAt;
   // Receiving under pressure is worth less, but it is still the ball in that spot.
-  const ev = p * value * (1 - 0.25 * press) - (1 - p) * (oppValueAt(loss) + params.turnoverCost);
-  const succeeds = (r.threat ? r.threat.margin >= 0 : true) && extraP >= 0.5;
-  return { option, p, ev, press, value, threat: r.threat, succeeds, travel, speed, release };
+  const ev = p * value * (1 - 0.25 * press) - (1 - p) * (oppValueAt(lossPoint) + params.turnoverCost);
+  let loss: Loss | null = null;
+  if (r.threat && r.threat.margin < 0) {
+    // Cut out on the line: he arrives as the ball does.
+    loss = { id: r.threat.id, at: r.threat.at, time: release + dist(ballAt, r.threat.at) / speed };
+  } else if (footrace?.loss) {
+    loss = footrace.loss;
+  }
+  return { option, p, ev, press, value, threat: r.threat, succeeds: loss === null, loss, travel, speed, release };
 }
 
 export interface EvalOptions {
@@ -218,12 +241,23 @@ export function evalSpace(scenario: Scenario, t: number, at: V2, id: string, lab
     }
   }
   let defender = Infinity;
-  for (const opp of scenario.opps) defender = Math.min(defender, defenderTime(posAt(opp, t, scratch), target, params.interceptReach, params));
-  const footrace = sigmoid((defender - runner) / 0.15);
+  let defenderId: string | null = null;
+  for (const opp of scenario.opps) {
+    const time = defenderTime(posAt(opp, t, scratch), target, params.interceptReach, params);
+    if (time < defender) {
+      defender = time;
+      defenderId = opp.id;
+    }
+  }
+  const race2: Footrace = {
+    p: sigmoid((defender - runner) / 0.15),
+    // He wins it at the spot, but never before the ball is there.
+    loss: defenderId && defender < runner ? { id: defenderId, at: target, time: Math.max(defender, travel) } : null,
+  };
   const option: Option = { kind: "space", id, label, target, ...(runnerId ? { mateId: runnerId } : {}) };
   const r = race(scenario, t, ballAt, target, speed, release, params.interceptReach, params, params.passShield);
   const press = pressureAt(scenario, t, target, runner, params);
-  return finish(params, option, ballAt, r, Math.max(travel, runner), press, speed, release, footrace);
+  return finish(params, option, ballAt, r, Math.max(travel, runner), press, speed, release, race2);
 }
 
 const CARRY_DIRECTIONS = [-90, -60, -30, 0, 30, 60, 90];
@@ -250,8 +284,9 @@ export function gradeChoice(decision: Decision, choice: OptionEval, params: Mode
   const gap = bestEv - choice.ev;
   const correct = gap <= Math.max(params.tieAbs, params.tieRel * Math.abs(bestEv));
   let grade = correct ? 100 : Math.round(100 * clamp(1 - gap / params.gradeScale, 0, 0.95));
-  // A pass that gets cut out is never a decent mark, whatever the model's margins say.
-  if (!choice.succeeds) grade = Math.min(grade, params.failedCap);
+  // A wrong choice that gets cut out is never a decent mark, whatever the model's margins say.
+  // (The right choice can still fail, e.g. after a heavy touch: it keeps its marks.)
+  if (!correct && !choice.succeeds) grade = Math.min(grade, params.failedCap);
   return { grade, correct, gap };
 }
 

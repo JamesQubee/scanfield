@@ -14,24 +14,10 @@ import { CoachBoard, verdict } from "../ui/coachBoard";
 import { Hud } from "../ui/hud";
 import { Perf } from "../ui/perfHud";
 import { DEFAULT_TUNING, Moment, type MomentResult, type Tuning } from "./moment";
+import { recordResult, type DrillDef, type DrillRun } from "./drill";
 import { World } from "./world";
 
-export interface DrillDef {
-  id: string;
-  title: string;
-  blurb: string;
-  scenes: string[];
-  pro: boolean;
-}
-
-export interface DrillRun {
-  id: string;
-  drill: DrillDef;
-  specs: ScenarioSpec[];
-  index: number;
-  results: MomentResult[];
-  startedAt: number;
-}
+export type { DrillDef, DrillRun } from "./drill";
 
 export interface GameEvents {
   momentDone?(r: MomentResult, run: DrillRun | null): void;
@@ -45,6 +31,8 @@ export interface GameOptions {
   debug: boolean;
   /** Fewer camera shakes and no confetti (prefers-reduced-motion, can be overridden). */
   calm: () => boolean;
+  /** True while a menu covers the game: game keys are ignored then. */
+  menuOpen?: () => boolean;
   tuning: Tuning;
 }
 
@@ -285,7 +273,7 @@ export class Game {
       this.hud.clearFlash();
       const r = m.result!;
       if (this.run) {
-        this.run.results.push(r);
+        recordResult(this.run, r);
         this.updateDrillBar();
       }
       this.events.momentDone?.(r, this.run);
@@ -372,11 +360,16 @@ export class Game {
     }
     window.addEventListener("keydown", (e) => {
       const m = this.moment;
-      if (!m) return;
+      if (!m || this.opts.menuOpen?.()) return;
+      // A focused button handles its own Space/Enter; don't act twice.
+      const onButton = document.activeElement instanceof HTMLButtonElement;
+      let handled = true;
       if (e.key === "ArrowLeft" || e.key === "a") this.scan(-1);
       else if (e.key === "ArrowRight" || e.key === "d") this.scan(1);
-      else if ((e.key === " " || e.key === "Enter") && m.phase === "brief") m.skipBrief = true;
-      else if ((e.key === " " || e.key === "Enter") && m.phase === "review" && document.activeElement === document.body) this.next();
+      else if ((e.key === " " || e.key === "Enter") && !onButton && m.phase === "brief") m.skipBrief = true;
+      else if ((e.key === " " || e.key === "Enter") && !onButton && m.phase === "review") this.next();
+      else handled = false;
+      if (handled) e.preventDefault();
     });
   }
 

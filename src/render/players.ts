@@ -154,6 +154,7 @@ export class PlayersView {
   readonly ghosts: InstancedMesh;
   readonly shadows: InstancedMesh;
   readonly meshes: InstancedMesh[];
+  private readonly bodies: InstancedMesh[];
   private readonly ghostAlpha: InstancedBufferAttribute;
   private readonly shadowAlpha: InstancedBufferAttribute;
   readonly ghostMaterial: ShaderMaterial;
@@ -204,6 +205,7 @@ export class PlayersView {
     this.shadows.renderOrder = 1;
 
     this.meshes = [this.shadows, this.torso, this.head, this.hair, this.shorts, this.legs, this.arms, this.ghosts];
+    this.bodies = [this.torso, this.head, this.hair, this.shorts];
     for (const m of this.meshes) m.name = "players";
     this.anchors = Array.from({ length: max }, () => new Vector3());
   }
@@ -236,7 +238,7 @@ export class PlayersView {
       }
     }
     if (ball) this.writeShadow(shadows++, ball.x, ball.y, 0.55 + ball.h * 0.2, 0.4 / (1 + ball.h));
-    for (const m of [this.torso, this.head, this.hair, this.shorts]) m.count = real;
+    for (const m of this.bodies) m.count = real;
     this.legs.count = real * 2;
     this.arms.count = real * 2;
     this.ghosts.count = ghosts;
@@ -271,8 +273,10 @@ export class PlayersView {
       kickLeg = k < 0.45 ? -0.9 * (k / 0.45) : -0.9 + 2.1 * Math.min(1, (k - 0.45) / 0.35);
       if (k > 0.8) kickLeg *= 1 - (k - 0.8) / 0.2;
     }
-    const twist = Math.max(-0.8, Math.min(0.8, p.headYaw * 0.35));
-    const headTurn = Math.max(-1.6, Math.min(1.6, p.headYaw)) - twist;
+    // headYaw is a pitch heading offset; three.js turns the other way (see yawFromHeading).
+    const turn = -p.headYaw;
+    const twist = Math.max(-0.8, Math.min(0.8, turn * 0.35));
+    const headTurn = Math.max(-1.6, Math.min(1.6, turn)) - twist;
 
     compose(m4, mRoot, 0, 0.95, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1);
     this.shorts.setMatrixAt(i, m4);

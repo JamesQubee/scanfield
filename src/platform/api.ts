@@ -7,6 +7,9 @@ import { load, remove, save } from "./storage";
 const PLAYER_KEY = "sf.player";
 const OUTBOX_KEY = "sf.outbox";
 
+/** What happened to a queued run. "pending" means it stays queued and will be retried. */
+export type SaveStatus = { status: "saved"; res: SaveRunResponse } | { status: "rejected"; error: string } | { status: "pending" };
+
 export interface LocalPlayer {
   id: string;
   token: string;
@@ -86,29 +89,41 @@ export class Api {
     return this.authed<ListRunsResponse>("/api/runs");
   }
 
-  /** Queues the run, then tries to send everything queued. Resolves with this run's result if it went through. */
-  async saveRun(run: RunPayload): Promise<SaveRunResponse | null> {
+  private flushing: Promise<Map<string, SaveStatus>> | null = null;
+
+  /** Queues the run, then sends everything queued. */
+  async saveRun(run: RunPayload): Promise<SaveStatus> {
     const outbox = load<RunPayload[]>(OUTBOX_KEY, []);
     if (!outbox.some((r) => r.id === run.id)) outbox.push(run);
     save(OUTBOX_KEY, outbox.slice(-20));
+    // A flush already under way may have read the outbox before this run was added.
+    if (this.flushing) await this.flushing.catch(() => undefined);
     const results = await this.flush();
-    return results.get(run.id) ?? null;
+    return results.get(run.id) ?? { status: "pending" };
   }
 
-  async flush(): Promise<Map<string, SaveRunResponse>> {
-    const done = new Map<string, SaveRunResponse>();
-    const outbox = load<RunPayload[]>(OUTBOX_KEY, []);
-    for (const run of outbox) {
+  /** Sends the queued runs. Only one flush runs at a time; callers share it. */
+  flush(): Promise<Map<string, SaveStatus>> {
+    if (!this.flushing) this.flushing = this.sendQueued().finally(() => (this.flushing = null));
+    return this.flushing;
+  }
+
+  private async sendQueued(): Promise<Map<string, SaveStatus>> {
+    const done = new Map<string, SaveStatus>();
+    for (const run of load<RunPayload[]>(OUTBOX_KEY, [])) {
       try {
         // keepalive lets the request finish even if the page is closing.
-        done.set(run.id, await this.authed<SaveRunResponse>("/api/runs", { method: "POST", body: JSON.stringify(run), keepalive: true }));
+        const res = await this.authed<SaveRunResponse>("/api/runs", { method: "POST", body: JSON.stringify(run), keepalive: true });
+        done.set(run.id, { status: "saved", res });
       } catch (e) {
-        // A 4xx will never succeed: drop it rather than retry forever.
-        if (e instanceof ApiError && e.status >= 400 && e.status < 500) done.set(run.id, { ok: true, runId: run.id, duplicate: false, score: -1 });
+        // The server said no (bad payload, not allowed): retrying will not help, so stop
+        // retrying, but report it rather than pretend it was saved.
+        if (e instanceof ApiError && e.status >= 400 && e.status < 500 && e.status !== 408 && e.status !== 429) done.set(run.id, { status: "rejected", error: e.message });
         else break;
       }
     }
-    save(OUTBOX_KEY, outbox.filter((r) => !done.has(r.id)));
+    // Re-read: a run queued while we were sending must stay queued.
+    save(OUTBOX_KEY, load<RunPayload[]>(OUTBOX_KEY, []).filter((r) => !done.has(r.id)));
     return done;
   }
 

@@ -63,6 +63,8 @@ interface BallPlan {
   t1: number;
   /** Who has it after it arrives (follows them). */
   holder: string | null;
+  /** Scenario time the holder actually reaches it; until then it rests where it stopped. */
+  holdFrom: number;
   lofted: boolean;
 }
 
@@ -157,11 +159,6 @@ export class Moment {
         this.enter("decide", now);
         this.decideOpenedAt = now;
         this.timeScale = this.timed ? this.tuning.slowMotion : 0;
-        for (const e of s.all) {
-          if (e === s.you) continue;
-          const m = this.vision.memory.get(e.id);
-          if (m && !m.live) this.ghostAtDecision.set(e.id, { x: m.x, y: m.y });
-        }
         events.push(this.heavyTouch ? "heavy-touch" : "touch");
       } else {
         this.vision.step(this.tau);
@@ -219,6 +216,13 @@ export class Moment {
     const params = this.tuning.model;
     const extraDelay = this.heavyTouch ? params.heavyTouch : 0;
     this.commitTau = this.tau;
+    // What was on screen at the tap: players drawn as ghosts then are "where you thought".
+    this.ghostAtDecision.clear();
+    for (const e of s.all) {
+      if (e === s.you) continue;
+      const m = this.vision.memory.get(e.id);
+      if (m && !m.live) this.ghostAtDecision.set(e.id, { x: m.x, y: m.y });
+    }
     const decision = evaluateAll(s, this.tau, { params, extraDelay });
     const choice = tap ? this.optionFor(tap, extraDelay) : null;
     const graded = choice ? gradeChoice(decision, choice, params) : { grade: 0, correct: false, gap: Infinity };
@@ -259,6 +263,7 @@ export class Moment {
     const params = this.tuning.model;
     const t = this.tau;
     const me = posAt(s.you, t);
+    this.overrides.set(s.you.id, { from: me, to: me, t0: t, move: t, t1: t });
     if (!choice) {
       // Too late: the nearest defender arrives and takes it.
       let near: Entity | null = null;
@@ -270,28 +275,29 @@ export class Moment {
           near = o;
         }
       }
-      const arrive = t + params.reaction + Math.max(0, best - 1) / params.defenderSpeed;
+      const arrive = near ? t + params.reaction + Math.max(0, best - 1) / params.defenderSpeed : t + 0.6;
       if (near) this.overrides.set(near.id, { from: posAt(near, t + params.reaction), to: me, t0: t + params.reaction, move: t + params.reaction, t1: arrive, after: { x: -3, y: 0 } });
-      this.overrides.set(s.you.id, { from: me, to: me, t0: t, move: t, t1: t });
-      this.ball = { from: me, to: me, t0: arrive, t1: arrive, holder: near?.id ?? null, lofted: false };
+      this.ball = { from: me, to: me, t0: arrive, t1: arrive, holder: near?.id ?? null, holdFrom: arrive, lofted: false };
       this.outcomeEnd = arrive + 1.1;
       return;
     }
     const kind = choice.option.kind;
     const start = t + choice.release;
     const target = choice.option.target;
-    const cut = !choice.succeeds && choice.threat;
-    const end = cut ? choice.threat!.at : target;
+    const loss = choice.loss;
+    // The ball stops where it is won (on the line, or at the spot for a lost footrace).
+    const end = loss ? loss.at : target;
     const t1 = start + dist(me, end) / choice.speed;
     // You stop where you received it; on a carry you turn, then go.
-    this.overrides.set(s.you.id, { from: me, to: kind === "carry" ? end : me, t0: t, move: start, t1 });
-    if (cut) {
-      const thief = s.byId.get(choice.threat!.id)!;
+    if (kind === "carry") this.overrides.set(s.you.id, { from: me, to: end, t0: t, move: start, t1 });
+    if (loss) {
+      const thief = s.byId.get(loss.id)!;
       const t0 = t + params.reaction;
-      // He reacts, sprints to the point where he wins it, then carries it away.
-      this.overrides.set(thief.id, { from: posAt(thief, t0), to: end, t0, move: t0, t1: Math.max(t1, t0 + 0.15), after: { x: -4, y: 0 } });
-      this.ball = { from: me, to: end, t0: start, t1, holder: thief.id, lofted: false };
-      this.outcomeEnd = t1 + 1.2;
+      const wins = Math.max(t + loss.time, t0 + 0.15);
+      // He reacts, runs to where he wins it, then carries it away.
+      this.overrides.set(thief.id, { from: posAt(thief, t0), to: end, t0, move: t0, t1: wins, after: { x: -4, y: 0 } });
+      this.ball = { from: me, to: end, t0: start, t1, holder: thief.id, holdFrom: wins, lofted: false };
+      this.outcomeEnd = Math.max(t1, wins) + 1.2;
       return;
     }
     let ballEnd = t1;
@@ -301,7 +307,7 @@ export class Moment {
       this.overrides.set(id, { from: posAt(s.byId.get(id)!, t), to: target, t0: t, move: t, t1: ballEnd, after: { x: 3, y: 0 } });
     }
     const holder = kind === "carry" ? s.you.id : choice.option.mateId ?? null;
-    this.ball = { from: me, to: target, t0: start, t1: ballEnd, holder, lofted: false };
+    this.ball = { from: me, to: target, t0: start, t1: ballEnd, holder, holdFrom: ballEnd, lofted: false };
     this.outcomeEnd = ballEnd + 0.9;
   }
 
@@ -334,7 +340,7 @@ export class Moment {
       out.y = b.from.y + (b.to.y - b.from.y) * k;
       return out;
     }
-    if (b.holder) return this.truePos(this.scenario.byId.get(b.holder)!, tau, out) as V2 & { h: number };
+    if (b.holder && tau >= b.holdFrom) return this.truePos(this.scenario.byId.get(b.holder)!, tau, out) as V2 & { h: number };
     out.x = b.to.x;
     out.y = b.to.y;
     return out;

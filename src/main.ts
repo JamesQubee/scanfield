@@ -7,12 +7,12 @@ import { DEFAULT_TUNING } from "./game/moment";
 import { toScreen } from "./input/pick";
 import { evaluateAll } from "./eval/evaluate";
 import { deviceClass, identify, track } from "./platform/analytics";
-import { Api } from "./platform/api";
+import { Api, type SaveStatus } from "./platform/api";
 import { setSoundEnabled, unlockAudio } from "./platform/audio";
 import { setHaptics } from "./platform/haptics";
 import { load, save } from "./platform/storage";
 import { warmUp } from "./render/warmup";
-import type { RunPayload, SaveRunResponse } from "./shared/api-types";
+import type { RunPayload } from "./shared/api-types";
 import { h } from "./ui/h";
 import { Shell, type ShellState } from "./ui/shell";
 
@@ -35,6 +35,8 @@ const game = new Game(app, {
   clock: new Clock(FLAGS.capture ? "stepped" : "live"),
   debug: FLAGS.debug,
   calm: () => !effectsOn(),
+  // Any full-screen card or menu over the pitch blocks the game's keys.
+  menuOpen: () => !!app.querySelector(".shell.on"),
   tuning,
 });
 const api = new Api();
@@ -64,6 +66,8 @@ const shell = new Shell(app, DRILLS, state, {
     track("checkout_started", { plan: shell.plan });
     try {
       const res = await api.checkout();
+      // Only move on if the player is still waiting on the paywall.
+      if (shell.screen !== "paywall") return;
       if (res.mode === "demo") {
         demoSession = res.sessionId;
         shell.demoCheckout();
@@ -82,10 +86,12 @@ const shell = new Shell(app, DRILLS, state, {
       state.me = await api.me();
       track("checkout_completed", { plan: state.me.plan });
       shell.toast(state.me.plan === "pro" ? "Pro unlocked: webhook verified ✓" : "Payment received, waiting for confirmation");
-      shell.home();
+      // A slow answer must not pull a menu over a drill the player has since started.
+      if (shell.screen === "checkout") shell.home();
+      else shell.refresh();
     } catch {
       shell.toast("That did not go through. Try again.");
-      shell.home();
+      if (shell.screen === "checkout") shell.home();
     }
   },
   cancelSubscription: async () => {
@@ -121,6 +127,10 @@ const shell = new Shell(app, DRILLS, state, {
 });
 
 function play(d: DrillDef): void {
+  if (d.pro && shell.plan !== "pro") {
+    shell.paywall(d);
+    return;
+  }
   unlockAudio();
   persist();
   shell.hide();
@@ -145,9 +155,10 @@ function runPayload(run: DrillRun): RunPayload {
       bestId: r.best.option.id,
       grade: r.grade,
       correct: r.correct,
-      reactionMs: r.reactionMs,
+      // An untimed moment can wait as long as you like; the record keeps a minute.
+      reactionMs: r.reactionMs === null ? null : Math.min(r.reactionMs, 60_000),
       scans: r.scans,
-      lastScanBeforeArrivalMs: r.lastScanBeforeArrivalMs,
+      lastScanBeforeArrivalMs: r.lastScanBeforeArrivalMs === null ? null : Math.min(r.lastScanBeforeArrivalMs, 60_000),
       inputToFrameMs: r.inputToFrameMs === null ? null : Math.round(r.inputToFrameMs * 10) / 10,
     })),
   };
@@ -175,7 +186,7 @@ game.events.drillDone = (run) => {
   best[run.drill.id] = Math.max(best[run.drill.id] ?? 0, score);
   save("sf.best", best);
   track("drill_completed", { drill: run.drill.id, score, correct: run.results.filter((r) => r.correct).length, moments: run.results.length });
-  const saving: Promise<SaveRunResponse | null> = api.saveRun(runPayload(run)).catch(() => null);
+  const saving: Promise<SaveStatus> = api.saveRun(runPayload(run)).catch((): SaveStatus => ({ status: "pending" }));
   shell.summary(run, saving);
 };
 
@@ -228,15 +239,37 @@ window.addEventListener("online", () => void signIn());
 track("app_open", { device: deviceClass(), mode: single ? "scene" : "app", dpr: Math.round(devicePixelRatio * 100) / 100 });
 if (single) sceneCard();
 else shell.home();
-void signIn();
+const signedIn = signIn();
 
 if (FLAGS.tune) void import("./ui/tune").then((m) => m.openTuning(game, tuning));
-if (FLAGS.drill && !single) {
-  const d = DRILLS.find((x) => x.id === FLAGS.drill);
-  if (d) {
-    state.seenHowTo = true;
-    play(d);
-  }
+// ?drill=<id>: a card first, so the start is a real tap (audio can only unlock inside one)
+// and the plan is known before a Pro drill opens.
+const linked = FLAGS.drill && !single ? DRILLS.find((x) => x.id === FLAGS.drill) : undefined;
+if (linked) {
+  const card = h(
+    "div",
+    { class: "shell on" },
+    h(
+      "section",
+      { class: "screen scene-card" },
+      h("div", { class: "logo" }, h("span", { class: "logo-mark" }), "SCANFIELD"),
+      h("h2", { text: linked.title }),
+      h("p", { text: linked.blurb }),
+      h("button", {
+        class: "btn primary big",
+        attrs: { type: "button" },
+        text: "Tap to start",
+        on: {
+          click: () => {
+            card.remove();
+            state.seenHowTo = true;
+            void signedIn.then(() => play(linked));
+          },
+        },
+      }),
+    ),
+  );
+  app.append(card);
 }
 
 // Test and recording hooks (harmless in production: read-only helpers plus a frame stepper).

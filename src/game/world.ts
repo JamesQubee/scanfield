@@ -34,6 +34,7 @@ export interface Label {
 }
 
 const tmp: V2 = { x: 0, y: 0 };
+const meTmp: V2 = { x: 0, y: 0 };
 const ballTmp = { x: 0, y: 0, h: 0 };
 
 export class World {
@@ -61,6 +62,9 @@ export class World {
   readonly labels: Label[] = [];
   /** Drawn positions of teammates you can pass to (decide phase), with ids. */
   readonly targets: { id: string; x: number; y: number }[] = [];
+  // Pools: the frame loop refills the two lists above with these objects, never new ones.
+  private readonly labelPool: Label[] = Array.from({ length: 24 }, () => ({ number: 0, team: "us" as const, you: false, ghost: false, anchor: 0 }));
+  private readonly targetPool = Array.from({ length: 24 }, () => ({ id: "", x: 0, y: 0 }));
   private tracks = new Map<string, Track>();
   private lastTau = 0;
   coneAmount = 0;
@@ -111,7 +115,7 @@ export class World {
     const ghostFade = decided ? Math.max(0, 1 - (now - moment.outcomeStart) / 0.9) : 1;
     const vision = moment.vision;
     const ball = moment.ballPos(tau, ballTmp);
-    const me = moment.truePos(s.you, tau, { x: 0, y: 0 });
+    const me = moment.truePos(s.you, tau, meTmp);
 
     this.labels.length = 0;
     this.targets.length = 0;
@@ -168,9 +172,19 @@ export class World {
         }
       }
       if (phase === "decide" && e.team === "mate") {
-        this.targets.push({ id: e.id, x: pose.visible ? pose.x : pose.gx, y: pose.visible ? pose.y : pose.gy });
+        const t = this.targetPool[this.targets.length]!;
+        t.id = e.id;
+        t.x = pose.visible ? pose.x : pose.gx;
+        t.y = pose.visible ? pose.y : pose.gy;
+        this.targets.push(t);
       }
-      this.labels.push({ number: e.number, team: e.team === "opp" ? "them" : "us", you: e === s.you, ghost: !pose.visible && pose.ghost > 0, anchor: n });
+      const l = this.labelPool[n]!;
+      l.number = e.number;
+      l.team = e.team === "opp" ? "them" : "us";
+      l.you = e === s.you;
+      l.ghost = !pose.visible && pose.ghost > 0;
+      l.anchor = n;
+      this.labels.push(l);
       n++;
     }
     this.players.update(this.poses, n, now, ball);

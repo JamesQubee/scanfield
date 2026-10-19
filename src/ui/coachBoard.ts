@@ -89,11 +89,26 @@ export class CoachBoard {
       h("div", { class: "board-text" }, this.lines, this.why, this.tip, this.timeline, this.stats),
       h("div", { class: "board-actions" }, this.replay, this.next),
     );
+    this.root.inert = true;
     host.append(this.root);
+    window.addEventListener("resize", () => requestAnimationFrame(() => this.redraw()));
   }
+
+  private last: { moment: Moment; r: MomentResult } | null = null;
 
   hide(): void {
     this.root.classList.remove("on");
+    // Off screen means out of reach: no focus, no Space/Enter on a hidden "Next".
+    this.root.inert = true;
+    if (this.root.contains(document.activeElement)) (document.activeElement as HTMLElement).blur();
+    this.last = null;
+  }
+
+  /** Redraw at the new size (phone rotated while the board is open). */
+  redraw(): void {
+    if (!this.last) return;
+    this.drawBoard(this.last.moment, this.last.r);
+    this.drawTimeline(this.last.moment);
   }
 
   show(moment: Moment, r: MomentResult, last: boolean, canReplay: boolean): void {
@@ -125,8 +140,10 @@ export class CoachBoard {
     this.stats.replaceChildren(...stats.filter((x): x is HTMLElement => x !== null));
     this.next.textContent = last ? "See results" : "Next";
     this.replay.style.display = canReplay ? "" : "none";
+    this.root.inert = false;
     this.root.classList.add("on");
     this.root.scrollTop = 0;
+    this.last = { moment, r };
     // Draw after layout so the canvas knows its size.
     requestAnimationFrame(() => {
       this.drawBoard(moment, r);
@@ -192,7 +209,14 @@ export class CoachBoard {
     const shown: OptionEval[] = evs.filter((e) => e.option.kind !== "carry");
     if (bestCarry) shown.push(bestCarry);
     const bestEv = Math.max(r.best.ev, r.choice?.ev ?? -Infinity);
-    const gradeOf = (e: OptionEval) => Math.round(100 * Math.max(0, Math.min(1, 1 - (bestEv - e.ev) / moment.tuning.model.gradeScale)));
+    const params = moment.tuning.model;
+    // Same rule as the grade: a choice that gets cut out is never shown as a good one.
+    const gradeOf = (e: OptionEval) => {
+      const gap = bestEv - e.ev;
+      if (gap <= Math.max(params.tieAbs, params.tieRel * Math.abs(bestEv))) return 100;
+      const g = Math.round(100 * Math.max(0, Math.min(0.95, 1 - gap / params.gradeScale)));
+      return e.succeeds ? g : Math.min(g, params.failedCap);
+    };
     // Carries are judged over a few metres; draw them longer so the direction reads.
     const tip = (e: OptionEval) => {
       const t = e.option.target;
@@ -248,8 +272,8 @@ export class CoachBoard {
     if (r.choice) {
       const tgt = tip(r.choice);
       arrow(g, sx(me.y), sy(me.x), sx(tgt.y), sy(tgt.x), "#ffffff", 4);
-      if (!r.choice.succeeds && r.choice.threat) {
-        const at = r.choice.threat.at;
+      if (r.choice.loss) {
+        const at = r.choice.loss.at;
         g.strokeStyle = RED;
         g.lineWidth = 3;
         const X = sx(at.y), Y = sy(at.x);

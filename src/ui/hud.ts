@@ -116,7 +116,11 @@ export class Hud {
     this.scanCount.classList.toggle("on", on);
   }
 
+  private lastScans = -1;
+
   setScans(n: number): void {
+    if (n === this.lastScans) return;
+    this.lastScans = n;
     this.scanCount.textContent = n === 0 ? "No checks yet" : n === 1 ? "1 check" : `${n} checks`;
   }
 

@@ -88,12 +88,14 @@ export class Vision {
     return true;
   }
 
-  /** Head turn relative to the body at time t, radians. */
+  /** Head turn relative to the body at time t, radians. Frozen once the ball arrives. */
   scanOffset(t: number): number {
     const last = this.scans[this.scans.length - 1];
     if (!last) return 0;
     const { scanOut, scanHold, scanBack, scanAngle } = this.params;
-    const local = t - last.start;
+    // A check still under way when the ball arrives stays where it was: that is the
+    // heavy touch, and the picture must not keep sweeping while you decide.
+    const local = Math.min(t, this.scenario.arrival) - last.start;
     if (local < 0) return 0;
     let k: number;
     if (local < scanOut) k = smoothstep(local / scanOut);

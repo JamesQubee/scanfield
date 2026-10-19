@@ -50,6 +50,17 @@ describe.each(specs.map((s) => [s.id, s] as const))("%s", (_id, spec) => {
     for (const dt of WINDOW) expect(intendedMargin(spec, s.arrival + dt), `at +${dt}s`).toBeGreaterThan(MIN_MARGIN);
   });
 
+  it("the intended option actually works across the whole decision window", () => {
+    // Ranking first is not enough: if it is cut out, a perfect read scores like a mistake.
+    const s = buildScenario(spec);
+    for (const dt of WINDOW) {
+      const d = evaluateAll(s, s.arrival + dt);
+      const intended = d.candidates.filter((c) => matchesIntended(spec.intendedBest, c.option.id)).sort((a, b) => b.ev - a.ev)[0]!;
+      expect(intended.succeeds, `at +${dt}s`).toBe(true);
+      expect(intended.threat?.margin ?? Infinity, `margin at +${dt}s`).toBeGreaterThan(0.05);
+    }
+  });
+
   it("stays first when positions and speeds are nudged (at least 80% of 50 runs)", () => {
     const r = rng(spec.id.length * 7919);
     let ok = 0;

@@ -1,6 +1,6 @@
 {
   "id": "bg-02-bounce-wide",
-  "version": 1,
+  "version": 2,
   "title": "Bounce it wide",
   "skill": "back-to-goal",
   "brief": "Marked from behind, and the way back is closed too. Look for the third option.",
@@ -24,7 +24,7 @@
     { "id": "m8", "number": 8, "path": [[0, 50, 46]] }
   ],
   "opponents": [
-    { "id": "o5", "number": 5, "path": [[0, 65, 35], [2.4, 61.8, 34.4]] },
+    { "id": "o5", "number": 5, "path": [[0, 65, 35], [2.4, 62.2, 33.2]] },
     { "id": "o9", "number": 9, "path": [[0, 45, 26], [1.2, 46, 27], [2.4, 51, 31]] },
     { "id": "o8", "number": 8, "path": [[0, 53, 42], [2.4, 54, 44]] },
     { "id": "o4", "number": 4, "path": [[0, 73, 31]] },

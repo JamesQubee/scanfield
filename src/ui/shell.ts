@@ -3,7 +3,8 @@
 
 import type { DrillDef, DrillRun } from "../game/game";
 import type { MomentResult } from "../game/moment";
-import type { ListRunsResponse, MeResponse, Plan, SaveRunResponse } from "../shared/api-types";
+import type { ListRunsResponse, MeResponse, Plan } from "../shared/api-types";
+import type { SaveStatus } from "../platform/api";
 import { SKILLS, type Skill } from "../sim/scenario";
 import { analyticsMode, onEvents, recentEvents } from "../platform/analytics";
 import { gradeColor } from "./coachBoard";
@@ -181,7 +182,12 @@ export class Shell {
 
   // ------------------------------------------------------------------ results
 
-  summary(run: DrillRun, saving: Promise<SaveRunResponse | null>): void {
+  /** The menu screen on show, or null while playing. */
+  get screen(): Screen | null {
+    return this.current;
+  }
+
+  summary(run: DrillRun, saving: Promise<SaveStatus>): void {
     const rs = run.results;
     const score = Math.round(rs.reduce((a, r) => a + r.grade, 0) / Math.max(1, rs.length));
     const correct = rs.filter((r) => r.correct).length;
@@ -198,8 +204,9 @@ export class Shell {
     const saveEl = h("div", { class: "save-state", text: "Saving to your progress…" });
     saving.then(
       (res) => {
-        saveEl.textContent = res ? "Saved to your progress ✓" : "Offline: saved on this device, will sync later";
-        saveEl.classList.add(res ? "ok" : "warn");
+        saveEl.textContent =
+          res.status === "saved" ? "Saved to your progress ✓" : res.status === "rejected" ? "This run could not be saved (the server refused it)" : "Offline: saved on this device, will sync later";
+        saveEl.classList.add(res.status === "saved" ? "ok" : "warn");
       },
       () => {
         saveEl.textContent = "Could not save right now; it will retry";

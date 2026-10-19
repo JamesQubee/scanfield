@@ -1,6 +1,7 @@
 // Scenario files and the drills built from them. Adding a scenario is adding a JSON
 // file; adding a drill is one entry here.
 
+import { PRO_DRILL_IDS } from "../shared/plans";
 import { validateSpec, type ScenarioSpec } from "../sim/scenario";
 import type { DrillDef } from "./game";
 
@@ -18,21 +19,21 @@ export const DRILLS: DrillDef[] = [
     title: "Half-turn basics",
     blurb: "Check your shoulder while the ball travels, then turn or play safe.",
     scenes: ["ht-01-marker-leaves", "ht-02-still-there", "ht-03-away-from-pressure", "pf-01-through-the-lines", "ht-04-other-shoulder", "bg-03-lane-closes"],
-    pro: false,
+    pro: PRO_DRILL_IDS.includes("half-turn-basics"),
   },
   {
     id: "play-forward",
     title: "Play forward",
     blurb: "Find the free player behind you: between the lines, in behind, far side.",
     scenes: ["pf-01-through-the-lines", "pf-02-run-in-behind", "ht-01-marker-leaves", "pf-03-far-side", "bg-02-bounce-wide"],
-    pro: false,
+    pro: PRO_DRILL_IDS.includes("play-forward"),
   },
   {
     id: "back-to-goal",
     title: "Back to goal",
     blurb: "Pressed from behind: set it back, bounce it wide or spot the lane closing.",
     scenes: ["bg-01-pressed-from-behind", "bg-02-bounce-wide", "ht-02-still-there", "bg-03-lane-closes", "pf-02-run-in-behind"],
-    pro: true,
+    pro: PRO_DRILL_IDS.includes("back-to-goal"),
   },
 ];
 

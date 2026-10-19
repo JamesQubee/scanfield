@@ -140,7 +140,8 @@ export function validateSpec(spec: ScenarioSpec): void {
     (best.startsWith("pass:") && spec.teammates.some((m) => `pass:${m.id}` === best && m.id !== spec.passer)) ||
     (best.startsWith("space:") && (spec.spaces ?? []).some((s) => `space:${s.id}` === best));
   if (!okBest) fail(sid, `intendedBest ${best} does not name an option in this scenario`);
-  if (spec.keyEntity !== undefined && !ids.has(spec.keyEntity)) fail(sid, `keyEntity ${spec.keyEntity} not found`);
+  const players = new Set([...spec.teammates, ...spec.opponents].map((e) => e.id));
+  if (spec.keyEntity !== undefined && !players.has(spec.keyEntity)) fail(sid, `keyEntity ${spec.keyEntity} must be a teammate or an opponent`);
   if (spec.scanRequired && spec.keyEntity === undefined) fail(sid, "scanRequired needs keyEntity");
 }
 
@@ -204,6 +205,9 @@ export function velAt(e: Entity, t: number, out: V2 = { x: 0, y: 0 }): V2 {
   return out;
 }
 
+/** How far in front of the passer the ball sits before the kick, m. */
+const BALL_LEAD = 0.6;
+
 export function buildScenario(spec: ScenarioSpec): Scenario {
   validateSpec(spec);
   const you = buildEntity(spec.you, "you");
@@ -212,12 +216,19 @@ export function buildScenario(spec: ScenarioSpec): Scenario {
   const all = [you, ...mates, ...opps];
   const byId = new Map(all.map((e) => [e.id, e]));
   const passer = byId.get(spec.passer)!;
-  const kickFrom = posAt(passer, spec.kickAt);
+  const feet = posAt(passer, spec.kickAt);
   // The ball meets you where you will be when it arrives: solve by fixed-point iteration.
+  // It is struck from just in front of the passer (where it sits before the kick).
   let arrival = spec.kickAt + 1;
   const receiveAt: V2 = { x: 0, y: 0 };
+  const kickFrom: V2 = { x: feet.x, y: feet.y };
   for (let i = 0; i < 6; i++) {
     posAt(you, arrival, receiveAt);
+    const dx = receiveAt.x - feet.x;
+    const dy = receiveAt.y - feet.y;
+    const d = Math.hypot(dx, dy) || 1;
+    kickFrom.x = feet.x + (dx / d) * BALL_LEAD;
+    kickFrom.y = feet.y + (dy / d) * BALL_LEAD;
     arrival = spec.kickAt + Math.hypot(receiveAt.x - kickFrom.x, receiveAt.y - kickFrom.y) / spec.passSpeed;
   }
   posAt(you, arrival, receiveAt);
@@ -233,8 +244,8 @@ export function ballAt(s: Scenario, t: number, out: V2 = { x: 0, y: 0 }): V2 {
     const dx = s.receiveAt.x - out.x;
     const dy = s.receiveAt.y - out.y;
     const d = Math.hypot(dx, dy) || 1;
-    out.x += (dx / d) * 0.6;
-    out.y += (dy / d) * 0.6;
+    out.x += (dx / d) * BALL_LEAD;
+    out.y += (dy / d) * BALL_LEAD;
     return out;
   }
   if (t >= s.arrival) return posAt(s.you, t, out);

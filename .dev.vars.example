@@ -1,0 +1,2 @@
+TOKEN_PEPPER=change-me-to-a-long-random-string
+LS_SIGNING_SECRET=the-signing-secret-of-your-lemon-squeezy-webhook

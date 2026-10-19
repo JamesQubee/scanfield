@@ -69,6 +69,11 @@ function nullable<T>(value: unknown, read: (v: unknown) => T): T | null {
   return value === null ? null : read(value);
 }
 
+/** A non-negative number, capped rather than rejected (a long think is still valid play). */
+function capped(value: unknown, path: string, max: number): number {
+  return Math.min(finite(value, path, 0, Number.MAX_SAFE_INTEGER), max);
+}
+
 function parseMoment(raw: unknown, path: string, count: number): ValidMoment {
   if (!isRecord(raw)) invalid(path, "must be an object");
   const choiceKind = raw.choiceKind as ChoiceKind;
@@ -84,12 +89,10 @@ function parseMoment(raw: unknown, path: string, count: number): ValidMoment {
     bestId: safeString(raw.bestId, `${path}.bestId`),
     grade: integer(raw.grade, `${path}.grade`, 0, 100),
     correct: raw.correct,
-    reactionMs: nullable(raw.reactionMs, (v) => Math.round(finite(v, `${path}.reactionMs`, 0, 60_000))),
+    reactionMs: nullable(raw.reactionMs, (v) => Math.round(capped(v, `${path}.reactionMs`, 60_000))),
     scans: integer(raw.scans, `${path}.scans`, 0, 50),
-    lastScanBeforeArrivalMs: nullable(raw.lastScanBeforeArrivalMs, (v) =>
-      Math.round(finite(v, `${path}.lastScanBeforeArrivalMs`, 0, 60_000)),
-    ),
-    inputToFrameMs: nullable(raw.inputToFrameMs, (v) => finite(v, `${path}.inputToFrameMs`, 0, 10_000)),
+    lastScanBeforeArrivalMs: nullable(raw.lastScanBeforeArrivalMs, (v) => Math.round(capped(v, `${path}.lastScanBeforeArrivalMs`, 60_000))),
+    inputToFrameMs: nullable(raw.inputToFrameMs, (v) => capped(v, `${path}.inputToFrameMs`, 10_000)),
   };
 }
 
@@ -98,9 +101,14 @@ export function parseRunPayload(raw: unknown, now = Date.now()): ValidRun {
   if (!isRecord(raw)) invalid("body", "must be an object");
   if (typeof raw.id !== "string" || !UUID.test(raw.id)) invalid("id", "must be a UUID");
 
-  const startedAt = integer(raw.startedAt, "startedAt", EARLIEST_RUN, now + MAX_CLOCK_SKEW_MS);
-  const finishedAt = integer(raw.finishedAt, "finishedAt", startedAt, now + MAX_CLOCK_SKEW_MS);
-  if (finishedAt - startedAt > MAX_RUN_DURATION_MS) invalid("finishedAt", "is more than 3 hours after startedAt");
+  // Device clocks drift and phones sit in pockets mid-drill: keep the run, fix the times.
+  // A finish in the future means the device clock is fast, so use the server's clock; a
+  // very long run is capped. Only nonsense (not integers, finish before start) is refused.
+  const rawStart = integer(raw.startedAt, "startedAt", 0, Number.MAX_SAFE_INTEGER);
+  const rawFinish = integer(raw.finishedAt, "finishedAt", rawStart, Number.MAX_SAFE_INTEGER);
+  const duration = Math.min(rawFinish - rawStart, MAX_RUN_DURATION_MS);
+  const finishedAt = rawFinish > now + MAX_CLOCK_SKEW_MS || rawFinish < EARLIEST_RUN ? now : rawFinish;
+  const startedAt = finishedAt - duration;
 
   if (!Array.isArray(raw.moments) || raw.moments.length < 1 || raw.moments.length > MAX_MOMENTS) {
     invalid("moments", `must be an array of 1..${MAX_MOMENTS} moments`);
