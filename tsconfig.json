@@ -15,5 +15,6 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "scenarios", "tests/unit", "scripts"]
+  "include": ["src"],
+  "exclude": ["src/shared/**/*.test.ts"]
 }

@@ -11,7 +11,7 @@
     "dev": "vite --host 127.0.0.1 --port 5540 --strictPort",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1 --port 5541 --strictPort",
-    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.worker.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.worker.json",
     "test": "vitest run",
     "test:unit": "vitest run --project unit",
     "test:worker": "vitest run --project worker",
