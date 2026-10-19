@@ -135,7 +135,9 @@ export class Game {
     }
     if (!this.moment && this.backdrop) this.orbit(now);
     else this.rig.update(now);
+    const t1 = performance.now();
     this.stage.render();
+    const t2 = performance.now();
     this.frameNo++;
     // The frame that answers the tap has been submitted: measure, then let the moment score it.
     if (this.latencyProbe !== null && this.moment) {
@@ -149,6 +151,7 @@ export class Game {
       this.moment.tapReady = true;
     }
     this.hud.placeLabels(this.world.labels, this.world.players.anchors, this.stage.frame, !!this.moment && this.moment.phase !== "review");
+    this.perf.split(t1 - t0 + (performance.now() - t2), t2 - t1);
     const info = this.stage.renderer.info.render;
     this.perf.paint(now, { calls: info.calls, triangles: info.triangles, dpr: this.stage.pixelRatio, w: this.stage.width, h: this.stage.height });
   }
@@ -424,6 +427,7 @@ export class Game {
 
   /** The hot path: everything here is constant-time and allocation-light. */
   private commitTap(e: PointerEvent, m: Moment): void {
+    const t0 = performance.now();
     const at = this.clock.fromEvent(e.timeStamp);
     if (at < m.decideOpenedAt) return;
     const f = this.stage.frame;
@@ -440,5 +444,6 @@ export class Game {
     sfx("tap", 0.9);
     buzz(12);
     this.latencyProbe = e.timeStamp;
+    this.perf.lastHandlerMs = performance.now() - t0;
   }
 }

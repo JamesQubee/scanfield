@@ -124,6 +124,7 @@ function pressureAt(scenario: Scenario, t: number, at: V2, arrive: number, param
 }
 
 function finish(
+  params: ModelParams,
   option: Option,
   ballAt: V2,
   r: { pAll: number; threat: Threat | null },
@@ -137,7 +138,7 @@ function finish(
   const value = valueAt(option.target);
   const loss = r.threat && r.threat.margin < 0.25 ? r.threat.at : ballAt;
   // Receiving under pressure is worth less, but it is still the ball in that spot.
-  const ev = p * value * (1 - 0.25 * press) - (1 - p) * oppValueAt(loss);
+  const ev = p * value * (1 - 0.25 * press) - (1 - p) * (oppValueAt(loss) + params.turnoverCost);
   const succeeds = (r.threat ? r.threat.margin >= 0 : true) && extraP >= 0.5;
   return { option, p, ev, press, value, threat: r.threat, succeeds, travel, speed, release };
 }
@@ -176,7 +177,7 @@ export function evalPass(scenario: Scenario, t: number, mate: Entity, o: EvalOpt
   };
   const r = race(scenario, t, ballAt, target, speed, release, params.interceptReach, params, params.passShield);
   const press = pressureAt(scenario, t, target, travel, params);
-  return finish(option, ballAt, r, travel, press, speed, release);
+  return finish(params, option, ballAt, r, travel, press, speed, release);
 }
 
 export function evalCarry(scenario: Scenario, t: number, toward: V2, id: string, o: EvalOptions = {}, length?: number): OptionEval {
@@ -193,7 +194,7 @@ export function evalCarry(scenario: Scenario, t: number, toward: V2, id: string,
   // Defenders already right on top of you get a head start: the carry starts at your feet.
   const r = race(scenario, t, ballAt, target, params.carrySpeed, release, params.tackleReach, params);
   const press = pressureAt(scenario, t, target, travel, params);
-  return finish(option, ballAt, r, travel, press, params.carrySpeed, release);
+  return finish(params, option, ballAt, r, travel, press, params.carrySpeed, release);
 }
 
 /** A ball into space: the line race, then a footrace at the spot between our runner and theirs. */
@@ -222,7 +223,7 @@ export function evalSpace(scenario: Scenario, t: number, at: V2, id: string, lab
   const option: Option = { kind: "space", id, label, target, ...(runnerId ? { mateId: runnerId } : {}) };
   const r = race(scenario, t, ballAt, target, speed, release, params.interceptReach, params, params.passShield);
   const press = pressureAt(scenario, t, target, runner, params);
-  return finish(option, ballAt, r, Math.max(travel, runner), press, speed, release, footrace);
+  return finish(params, option, ballAt, r, Math.max(travel, runner), press, speed, release, footrace);
 }
 
 const CARRY_DIRECTIONS = [-90, -60, -30, 0, 30, 60, 90];
@@ -248,7 +249,9 @@ export function gradeChoice(decision: Decision, choice: OptionEval, params: Mode
   const bestEv = Math.max(decision.best.ev, choice.ev);
   const gap = bestEv - choice.ev;
   const correct = gap <= Math.max(params.tieAbs, params.tieRel * Math.abs(bestEv));
-  const grade = correct ? 100 : Math.round(100 * clamp(1 - gap / params.gradeScale, 0, 0.95));
+  let grade = correct ? 100 : Math.round(100 * clamp(1 - gap / params.gradeScale, 0, 0.95));
+  // A pass that gets cut out is never a decent mark, whatever the model's margins say.
+  if (!choice.succeeds) grade = Math.min(grade, params.failedCap);
   return { grade, correct, gap };
 }
 

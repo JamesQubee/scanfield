@@ -571,3 +571,40 @@ canvas.stage {
   pointer-events: none;
   z-index: 50;
 }
+
+/* Phones held sideways: board on the left, the coaching on the right. */
+@media (orientation: landscape) and (max-height: 540px) {
+  .board {
+    width: min(100vw, 900px);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    grid-template-areas: "head head" "pitch text" "pitch actions";
+    column-gap: 16px;
+    align-items: start;
+  }
+  .board-head {
+    grid-area: head;
+  }
+  .board-pitch {
+    grid-area: pitch;
+  }
+  .board-text {
+    grid-area: text;
+  }
+  .board-actions {
+    grid-area: actions;
+  }
+  .board-canvas {
+    height: min(calc(100dvh - 150px), 300px);
+  }
+  .board-why,
+  .board-tip {
+    font-size: 14px;
+  }
+  .hud-banner {
+    top: calc(var(--safe-t) + 56px);
+  }
+  .hud-hint {
+    bottom: calc(var(--safe-b) + 20px);
+  }
+}

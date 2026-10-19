@@ -32,6 +32,10 @@ export interface ModelParams {
   raceSoftness: number;
   /** Extra time lost by a heavy first touch (ball arrived while you looked away), s. */
   heavyTouch: number;
+  /** Losing the ball costs this much on top of the counter-attack threat (shape lost, momentum gone). */
+  turnoverCost: number;
+  /** Highest grade for a choice that gets cut out. */
+  failedCap: number;
   /** EV gap that maps to a grade of 0. */
   gradeScale: number;
   /** EV gaps this small still count as the right answer. */
@@ -55,6 +59,8 @@ export const DEFAULT_PARAMS: ModelParams = {
   tackleReach: 1.2,
   raceSoftness: 0.12,
   heavyTouch: 0.25,
+  turnoverCost: 0.015,
+  failedCap: 35,
   gradeScale: 0.04,
   tieAbs: 0.0015,
   tieRel: 0.08,

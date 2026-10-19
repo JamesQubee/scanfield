@@ -80,13 +80,13 @@ export class CoachBoard {
       "div",
       { class: "board", attrs: { role: "dialog", "aria-label": "Coach board" } },
       h("div", { class: "board-head" }, this.gradeEl, this.verdictEl),
-      this.canvas,
-      h("div", { class: "board-legend" }, h("span", { class: "lg you" }, "your choice"), h("span", { class: "lg best" }, "best"), h("span", { class: "lg ghost" }, "where you thought")),
-      this.lines,
-      this.why,
-      this.tip,
-      this.timeline,
-      this.stats,
+      h(
+        "div",
+        { class: "board-pitch" },
+        this.canvas,
+        h("div", { class: "board-legend" }, h("span", { class: "lg you" }, "your choice"), h("span", { class: "lg best" }, "best"), h("span", { class: "lg ghost" }, "where you thought")),
+      ),
+      h("div", { class: "board-text" }, this.lines, this.why, this.tip, this.timeline, this.stats),
       h("div", { class: "board-actions" }, this.replay, this.next),
     );
     host.append(this.root);
@@ -115,14 +115,18 @@ export class CoachBoard {
     this.tip.textContent = moment.spec.coach.tip;
     const reaction = r.reactionMs === null ? "—" : `${(r.reactionMs / 1000).toFixed(2)} s`;
     const scanText = r.scans === 0 ? "no checks" : `${r.scans} check${r.scans > 1 ? "s" : ""}${r.lastScanBeforeArrivalMs !== null ? `, last ${(r.lastScanBeforeArrivalMs / 1000).toFixed(1)} s before the ball` : ""}`;
-    this.stats.replaceChildren(
+    const stats: (HTMLElement | null)[] = [
       h("span", { class: "stat" }, h("b", { text: "Decision " }), reaction),
       h("span", { class: "stat" }, h("b", { text: "Scanning " }), scanText),
-      h("span", { class: "stat tech", attrs: { title: "Time from your finger touching the glass to the frame that shows the response being submitted" } }, h("b", { text: "Tap → frame " }), r.inputToFrameMs === null ? "—" : `${r.inputToFrameMs.toFixed(0)} ms`),
-    );
+      r.inputToFrameMs === null
+        ? null
+        : h("span", { class: "stat tech", attrs: { title: "From your finger touching the glass to the frame that answers it being submitted" } }, h("b", { text: "Tap → frame " }), `${r.inputToFrameMs.toFixed(0)} ms`),
+    ];
+    this.stats.replaceChildren(...stats.filter((x): x is HTMLElement => x !== null));
     this.next.textContent = last ? "See results" : "Next";
     this.replay.style.display = canReplay ? "" : "none";
     this.root.classList.add("on");
+    this.root.scrollTop = 0;
     // Draw after layout so the canvas knows its size.
     requestAnimationFrame(() => {
       this.drawBoard(moment, r);

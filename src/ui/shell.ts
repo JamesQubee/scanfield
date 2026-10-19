@@ -35,6 +35,12 @@ type Screen = "home" | "howto" | "summary" | "progress" | "settings" | "paywall"
 
 const LOCK = "🔒";
 
+let keyboardUser = false;
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Tab") keyboardUser = true;
+});
+window.addEventListener("pointerdown", () => (keyboardUser = false));
+
 export class Shell {
   readonly root: HTMLDivElement;
   private readonly screens = new Map<Screen, HTMLElement>();
@@ -77,7 +83,9 @@ export class Shell {
     this.root.classList.add("on");
     this.current = screen;
     this.screens.set(screen, el);
-    el.querySelector<HTMLElement>("[data-autofocus]")?.focus({ preventScroll: true });
+    // Move focus for keyboard users only; on touch a focus ring on the button just looks broken.
+    if (keyboardUser) el.querySelector<HTMLElement>("[data-autofocus]")?.focus({ preventScroll: true });
+    this.root.scrollTop = 0;
   }
 
   refresh(): void {
