@@ -62,8 +62,7 @@ export function screenOf(page: Page, x: number, y: number): Promise<{ x: number;
 /** The best option's target right now (computed by the game's own evaluator), as a page point. */
 export async function bestTargetOnScreen(page: Page): Promise<{ x: number; y: number; id: string }> {
   const t = await page.evaluate(() => (window as any).__game.bestTarget());
-  const p = await screenOf(page, t.x, t.y);
-  return { ...p, id: t.id };
+  return { x: t.sx, y: t.sy, id: t.id };
 }
 
 /** A real touch on the screen (falls back to a mouse click on non-touch projects). */

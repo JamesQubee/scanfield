@@ -292,12 +292,16 @@ window.__game = {
     const d = evaluateAll(m.scenario, m.tau, { params: m.tuning.model, extraDelay: m.heavyTouch ? m.tuning.model.heavyTouch : 0 });
     const best = d.best.option;
     const drawn = best.mateId ? game.world.targets.find((q) => q.id === best.mateId) : null;
-    return drawn ? { x: drawn.x, y: drawn.y, id: best.id } : { x: best.target.x, y: best.target.y, id: best.id };
-  },
-  /** Pitch metres to page coordinates, using the last frame on screen. */
-  toScreen: (x: number, y: number) => {
+    // A teammate is tapped on his body; a spot on the grass is tapped on the grass itself.
+    const at = drawn ? { x: drawn.x, y: drawn.y, h: 0.9 } : { x: best.target.x, y: best.target.y, h: 0 };
     const r = game.stage.canvas.getBoundingClientRect();
-    const p = toScreen(game.stage.frame, x, y, 0.9, { x: 0, y: 0 });
+    const s = toScreen(game.stage.frame, at.x, at.y, at.h, { x: 0, y: 0 });
+    return { ...at, id: best.id, sx: s.x + r.left, sy: s.y + r.top };
+  },
+  /** Pitch metres to page coordinates, using the last frame on screen (h = height above the grass). */
+  toScreen: (x: number, y: number, h = 0.9) => {
+    const r = game.stage.canvas.getBoundingClientRect();
+    const p = toScreen(game.stage.frame, x, y, h, { x: 0, y: 0 });
     return { x: p.x + r.left, y: p.y + r.top };
   },
 };

@@ -41,6 +41,8 @@ test("a whole drill: six moments, summary, saved to D1, shown in progress", asyn
   expect(runs.runs).toHaveLength(1);
   expect(runs.runs[0].momentsCount).toBe(6);
   expect(runs.runs[0].score).toBeGreaterThanOrEqual(85);
+  // Tapping the model's best option, after late checks both ways, is right every time.
+  expect(runs.runs[0].correctCount).toBe(6);
 
   await page.getByRole("button", { name: "Home" }).click();
   await page.getByRole("button", { name: "Progress" }).click();
