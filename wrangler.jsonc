@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "scanfield",
+  "main": "./worker/index.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    // The game is a single page; the Worker only runs for the API and the analytics proxy.
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/ingest/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "scanfield",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    // "1" turns on the simulated Lemon Squeezy checkout (server-signed test events).
+    "DEMO_MODE": "1",
+    "POSTHOG_HOST": "https://us.i.posthog.com",
+    "POSTHOG_ASSETS_HOST": "https://us-assets.i.posthog.com",
+    "LS_STORE_URL": ""
+  },
+  "observability": { "enabled": true }
+}
