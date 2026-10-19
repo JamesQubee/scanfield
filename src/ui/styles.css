@@ -1,5 +1,6 @@
 @import "@fontsource/barlow-condensed/latin-700.css";
 @import "@fontsource/barlow-condensed/latin-800.css";
+@import "./menus.css";
 
 :root {
   --bg: #0b1d12;
@@ -56,6 +57,9 @@ button {
   position: fixed;
   inset: 0;
   overflow: hidden;
+  /* clip, unlike hidden, cannot be scrolled by focus() or scrollIntoView(), so the
+     canvas never shifts under the finger. */
+  overflow: clip;
 }
 
 canvas.stage {
@@ -566,27 +570,4 @@ canvas.stage {
   white-space: pre;
   pointer-events: none;
   z-index: 50;
-}
-
-/* ------------------------------------------------------------------ temporary boot screen */
-
-.boot {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  background: linear-gradient(rgba(5, 12, 8, 0.2), rgba(5, 12, 8, 0.75));
-}
-.boot-logo {
-  font-family: var(--display);
-  font-weight: 800;
-  font-size: 56px;
-  letter-spacing: 0.04em;
-}
-.boot-tag {
-  color: var(--muted);
-  margin-bottom: 12px;
 }
